@@ -42,6 +42,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Jakub Narloch
  * @author Olga Maciaszek-Sharma
  * @author Tim Ysewyn
+ * @date 20200418
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties

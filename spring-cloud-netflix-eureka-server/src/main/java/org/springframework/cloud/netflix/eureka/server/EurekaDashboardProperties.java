@@ -24,6 +24,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Configuration properties for the Eureka dashboard (UI).
  *
  * @author Dave Syer
+ * @author kit
+ * @date 20200418
  */
 @ConfigurationProperties("eureka.dashboard")
 public class EurekaDashboardProperties {

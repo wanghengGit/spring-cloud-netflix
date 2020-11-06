@@ -30,7 +30,10 @@ import org.springframework.context.annotation.Import;
  *
  * @author Dave Syer
  * @author Biju Kunjummen
- *
+ * @author kit
+ * @date 20200413
+ * 可以看到，@EnableEurekaServer的@Import注解导入了一个EurekaServerMarkerConfiguration类。
+ * 所以，开启@EnableEurekaServer注解也就是导入该类
  */
 
 @Target(ElementType.TYPE)

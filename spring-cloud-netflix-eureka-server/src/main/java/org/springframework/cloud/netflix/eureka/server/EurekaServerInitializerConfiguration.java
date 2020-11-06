@@ -34,6 +34,8 @@ import org.springframework.web.context.ServletContextAware;
 
 /**
  * @author Dave Syer
+ * @author kit
+ * @date 20200418
  */
 @Configuration(proxyBeanMethods = false)
 public class EurekaServerInitializerConfiguration
@@ -64,15 +66,19 @@ public class EurekaServerInitializerConfiguration
 
 	@Override
 	public void start() {
+		// 启动一个线程
 		new Thread(() -> {
 			try {
 				// TODO: is this class even needed now?
+				//初始化EurekaServer，同时启动Eureka Server ，后面着重讲这里
 				eurekaServerBootstrap.contextInitialized(
 						EurekaServerInitializerConfiguration.this.servletContext);
 				log.info("Started Eureka Server");
-
+				// 发布EurekaServer的注册事件
 				publish(new EurekaRegistryAvailableEvent(getEurekaServerConfig()));
+				// 设置启动的状态为true
 				EurekaServerInitializerConfiguration.this.running = true;
+				// 发送Eureka Start 事件 ， 其他还有各种事件，我们可以监听这种时间，然后做一些特定的业务需求，后面会讲到。
 				publish(new EurekaServerStartedEvent(getEurekaServerConfig()));
 			}
 			catch (Exception ex) {

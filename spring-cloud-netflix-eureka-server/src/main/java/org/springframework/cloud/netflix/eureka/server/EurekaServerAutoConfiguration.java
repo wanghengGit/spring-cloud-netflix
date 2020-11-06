@@ -73,20 +73,28 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Gunnar Hillert
  * @author Biju Kunjummen
  * @author Fahim Farook
+ * @author kit
+ * @date 20200418
+ * 首先值得注意的是@ConditionalOnBean这个注解，它将判断EurekaServerMarkerConfiguration.Marker这个Bean是否存在。
+ * 如果存在才会解析这个自动配置类，从而呼应了@EnableEurekaServer这个注解的功能。
+ *
+ * @EnableConfigurationProperties注解和@PropertySource注解都加载了一些键值对的属性。
+ *
+ * @Import导入了一个初始化类EurekaServerInitializerConfiguration（后面再看它）
  */
-@Configuration(proxyBeanMethods = false)
-@Import(EurekaServerInitializerConfiguration.class)
+@Configuration(proxyBeanMethods = false) //表明这是一个配置类
+@Import(EurekaServerInitializerConfiguration.class) //导入启动EurekaServer的bean
 @ConditionalOnBean(EurekaServerMarkerConfiguration.Marker.class)
-@EnableConfigurationProperties({ EurekaDashboardProperties.class,
-		InstanceRegistryProperties.class })
-@PropertySource("classpath:/eureka/server.properties")
+@EnableConfigurationProperties({EurekaDashboardProperties.class,
+		InstanceRegistryProperties.class})
+@PropertySource("classpath:/eureka/server.properties")  //加载配置
 public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 
 	/**
 	 * List of packages containing Jersey resources required by the Eureka server.
 	 */
-	private static final String[] EUREKA_PACKAGES = new String[] {
-			"com.netflix.discovery", "com.netflix.eureka" };
+	private static final String[] EUREKA_PACKAGES = new String[]{
+			"com.netflix.discovery", "com.netflix.eureka"};
 
 	@Autowired
 	private ApplicationInfoManager applicationInfoManager;
@@ -114,6 +122,7 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				EurekaServerAutoConfiguration.class);
 	}
 
+	// 加载EurekaController, spring-cloud 提供了一些额外的接口，用来获取eurekaServer的信息
 	@Bean
 	@ConditionalOnProperty(prefix = "eureka.dashboard", name = "enabled",
 			matchIfMissing = true)
@@ -158,27 +167,30 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				this.instanceRegistryProperties.getDefaultOpenForTrafficCount());
 	}
 
+	// 配置服务节点信息，这里的作用主要是为了配置Eureka的peer节点，也就是说当有收到有节点注册上来
+	//的时候，需要通知给那些服务节点， （互为一个集群）
 	@Bean
 	@ConditionalOnMissingBean
 	public PeerEurekaNodes peerEurekaNodes(PeerAwareInstanceRegistry registry,
-			ServerCodecs serverCodecs,
-			ReplicationClientAdditionalFilters replicationClientAdditionalFilters) {
+										   ServerCodecs serverCodecs,
+										   ReplicationClientAdditionalFilters replicationClientAdditionalFilters) {
 		return new RefreshablePeerEurekaNodes(registry, this.eurekaServerConfig,
 				this.eurekaClientConfig, serverCodecs, this.applicationInfoManager,
 				replicationClientAdditionalFilters);
 	}
-
+	// EurekaServer的上下文
 	@Bean
 	@ConditionalOnMissingBean
 	public EurekaServerContext eurekaServerContext(ServerCodecs serverCodecs,
-			PeerAwareInstanceRegistry registry, PeerEurekaNodes peerEurekaNodes) {
+												   PeerAwareInstanceRegistry registry, PeerEurekaNodes peerEurekaNodes) {
 		return new DefaultEurekaServerContext(this.eurekaServerConfig, serverCodecs,
 				registry, peerEurekaNodes, this.applicationInfoManager);
 	}
-
+	// 这个类的作用是spring-cloud和原生eureka的胶水代码，通过这个类来启动EurekaSever
+	// 后面这个类会在EurekaServerInitializerConfiguration被调用，进行eureka启动
 	@Bean
 	public EurekaServerBootstrap eurekaServerBootstrap(PeerAwareInstanceRegistry registry,
-			EurekaServerContext serverContext) {
+													   EurekaServerContext serverContext) {
 		return new EurekaServerBootstrap(this.applicationInfoManager,
 				this.eurekaClientConfig, this.eurekaServerConfig, registry,
 				serverContext);
@@ -186,8 +198,10 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 
 	/**
 	 * Register the Jersey filter.
+	 *
 	 * @param eurekaJerseyApp an {@link Application} for the filter to be registered
 	 * @return a jersey {@link FilterRegistrationBean}
+	 * 配置拦截器，ServletContainer里面实现了jersey框架，通过他来实现eurekaServer对外的restFull接口
 	 */
 	@Bean
 	public FilterRegistrationBean<?> jerseyFilterRegistration(
@@ -204,13 +218,17 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 	/**
 	 * Construct a Jersey {@link javax.ws.rs.core.Application} with all the resources
 	 * required by the Eureka server.
-	 * @param environment an {@link Environment} instance to retrieve classpath resources
+	 *
+	 * @param environment    an {@link Environment} instance to retrieve classpath resources
 	 * @param resourceLoader a {@link ResourceLoader} instance to get classloader from
 	 * @return created {@link Application} object
+	 * 拦截器实例
+	 * Jersey提供rpc调用
+	 * jersey是一个restful风格的基于http的rpc调用框架，eureka使用它来为客户端提供远程服务
 	 */
 	@Bean
 	public javax.ws.rs.core.Application jerseyApplication(Environment environment,
-			ResourceLoader resourceLoader) {
+														  ResourceLoader resourceLoader) {
 
 		ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
 				false, environment);
@@ -289,10 +307,10 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 		private ReplicationClientAdditionalFilters replicationClientAdditionalFilters;
 
 		RefreshablePeerEurekaNodes(final PeerAwareInstanceRegistry registry,
-				final EurekaServerConfig serverConfig,
-				final EurekaClientConfig clientConfig, final ServerCodecs serverCodecs,
-				final ApplicationInfoManager applicationInfoManager,
-				final ReplicationClientAdditionalFilters replicationClientAdditionalFilters) {
+								   final EurekaServerConfig serverConfig,
+								   final EurekaClientConfig clientConfig, final ServerCodecs serverCodecs,
+								   final ApplicationInfoManager applicationInfoManager,
+								   final ReplicationClientAdditionalFilters replicationClientAdditionalFilters) {
 			super(registry, serverConfig, clientConfig, serverCodecs,
 					applicationInfoManager);
 			this.replicationClientAdditionalFilters = replicationClientAdditionalFilters;

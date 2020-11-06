@@ -38,6 +38,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Spencer Gibb
+ * @author kit
+ * @date 20200418
  */
 public class EurekaServerBootstrap {
 
@@ -65,9 +67,16 @@ public class EurekaServerBootstrap {
 		this.serverContext = serverContext;
 	}
 
+	/**
+	 * 初始化过程调用了EurekaServerBootstrap的contextInitialized方法
+	 * 这里初始化了EurekaEnvironment和EurekaServerContext，EurekaEnvironment无非就是设置了各种配置之类的东西
+	 * @param context
+	 */
 	public void contextInitialized(ServletContext context) {
 		try {
+			// 初始化Eureka的环境变量
 			initEurekaEnvironment();
+			// 初始化Eureka的上下文
 			initEurekaServerContext();
 
 			context.setAttribute(EurekaServerContext.class.getName(), this.serverContext);
@@ -110,13 +119,17 @@ public class EurekaServerBootstrap {
 					this.eurekaClientConfig, this.registry, this.applicationInfoManager);
 			this.awsBinder.start();
 		}
-
+		//初始化eureka server上下文
 		EurekaServerContextHolder.initialize(this.serverContext);
 
 		log.info("Initialized server context");
 
 		// Copy registry from neighboring eureka node
+		// 从相邻的eureka节点复制注册表
 		int registryCount = this.registry.syncUp();
+		// 默认每30秒发送心跳，1分钟就是2次
+		// 修改eureka状态为up
+		// 同时，这里面会开启一个定时任务，用于清理 60秒没有心跳的客户端。自动下线
 		this.registry.openForTraffic(this.applicationInfoManager, registryCount);
 
 		// Register all monitoring statistics.

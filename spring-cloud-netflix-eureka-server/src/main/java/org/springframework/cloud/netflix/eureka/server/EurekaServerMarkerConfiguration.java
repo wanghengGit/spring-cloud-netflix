@@ -24,6 +24,10 @@ import org.springframework.context.annotation.Configuration;
  * {@link EurekaServerAutoConfiguration}.
  *
  * @author Biju Kunjummen
+ * @author kit
+ * @date 20200413
+ * 可以看到，这里只是把一个空的Marker类变成了spring中的Bean。
+ * 而Marker本身什么功能都没有实现。顾名思义，我们可以这样猜测一下：@EnableEurekaServer注解就是将Marker配置为Bean，而Marker作为Bean的存在，将会触发自动配置，从而达到了一个开关的效果。
  */
 @Configuration(proxyBeanMethods = false)
 public class EurekaServerMarkerConfiguration {

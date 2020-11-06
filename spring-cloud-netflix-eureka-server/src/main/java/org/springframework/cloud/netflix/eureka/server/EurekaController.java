@@ -48,6 +48,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 /**
  * @author Spencer Gibb
  * @author Gang Li
+ * @author kit
+ * @date 20200418
  */
 @Controller
 @RequestMapping("${eureka.dashboard.path:/}")

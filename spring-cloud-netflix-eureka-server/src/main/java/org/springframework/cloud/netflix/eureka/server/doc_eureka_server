@@ -1,0 +1,4 @@
+总结
+@EnableEurekaServer注解开启了EurekaServerAutoConfiguration这个配置类的解析，
+EurekaServerAutoConfiguration这个配置了主要准备了看板、注册发现、启动引导、Jersey等，
+EurekaServerInitializerConfigration将会触发启动引导，引导过程会从其它Eureka集群节点当中同步注册信息
