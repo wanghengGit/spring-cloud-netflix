@@ -107,6 +107,13 @@ public class EurekaServerBootstrap {
 
 	}
 
+	/**
+	 *  初始化Eureka的上下文
+	 * 这里主要做了两件事：
+	 * 1）从相邻的集群节点当中同步注册信息
+	 * 2）注册一个统计器
+	 * @throws Exception
+	 */
 	protected void initEurekaServerContext() throws Exception {
 		// For backward compatibility
 		JsonXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(),
